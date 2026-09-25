@@ -4,6 +4,7 @@
 > **For educational and research purposes only**
 > Do not use this repo in a production environment
 > [Purchase a valid license](https://www.odoo.com/pricing)
+
 > [!NOTE]
 > Must run on Linux host (WSL is ok)
 - `docker-compose.yml`: postgresdb and odoo itself
