@@ -5,7 +5,7 @@ container="${ODOO_CONTAINER:-odoo19-fresh-web}"
 login="${1:-}"
 
 if [[ -z "$login" ]]; then
-    read -r -p "Odoo login: " login
+    read -r -p "Odoo user login: " login
 fi
 
 if [[ -z "$login" ]]; then
@@ -56,5 +56,5 @@ if not user:
 
 user.write({"password": password})
 env.cr.commit()
-print(f"Password updated for {user.login}")
+print(f"Password reset for Odoo user: {user.login}")
 PY
