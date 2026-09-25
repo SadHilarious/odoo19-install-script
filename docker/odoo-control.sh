@@ -143,10 +143,10 @@ delete_server() {
 
 print_menu() {
     printf '%s\n' \
-        "1. Bat Odoo" \
-        "2. Tat Odoo" \
-        "3. Xoa toan bo du lieu" \
-        "0. Thoat"
+        "1. Start Odoo" \
+        "2. Stop Odoo" \
+        "3. Delete all Odoo data" \
+        "0. Exit"
 }
 
 main() {
@@ -164,7 +164,7 @@ main() {
 
     while true; do
         print_menu
-        if ! read -r -p "Chon: " choice; then
+        if ! read -r -p "Choose an option: " choice; then
             exit 1
         fi
         case "$choice" in
@@ -172,7 +172,7 @@ main() {
             2) stop_server ;;
             3) delete_server ;;
             0) exit 0 ;;
-            *) printf '%s\n' "Lua chon khong hop le." ;;
+            *) printf '%s\n' "Invalid option." ;;
         esac
     done
 }
