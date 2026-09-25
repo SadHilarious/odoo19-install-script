@@ -5,7 +5,6 @@ script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 compose_file="${ODOO_COMPOSE_FILE:-$script_dir/docker-compose.yml}"
 project="${ODOO_PROJECT:-odoo19fresh}"
 container="${ODOO_CONTAINER:-odoo19-fresh-web}"
-postgres_container="${ODOO_POSTGRES_CONTAINER:-odoo19-fresh-postgres}"
 
 # Right here !
 ADDON_DIR="/opt/docker-data/odoo19-enterprise-crack"
@@ -124,8 +123,11 @@ stop_server() {
 
 delete_server() {
     local confirmation
+    local volume
+    local remaining_volumes
 
     require_runtime
+    printf '%s\n' "WARNING: This will stop the running Odoo stack and permanently delete its Odoo and PostgreSQL data." >&2
     if ! read -r -p "Type DELETE to erase all Odoo data: " confirmation; then
         printf '%s\n' "Deletion cancelled." >&2
         exit 1
@@ -135,9 +137,31 @@ delete_server() {
         exit 0
     fi
 
-    compose down --volumes --remove-orphans --timeout 30 || true
-    docker rm -f "$container" "$postgres_container" >/dev/null 2>&1 || true
-    docker volume rm odoo19_fresh_v2_odoo_data odoo19_fresh_v2_postgres_data >/dev/null 2>&1 || true
+    if ! compose down --volumes --remove-orphans --timeout 30; then
+        printf '%s\n' "Failed to stop the stack and remove its volumes. Check Docker output; data may still exist." >&2
+        return 1
+    fi
+
+    for volume in odoo19_fresh_v2_odoo_data odoo19_fresh_v2_postgres_data; do
+        if docker volume inspect "$volume" >/dev/null 2>&1; then
+            if ! docker volume rm "$volume"; then
+                printf 'Could not remove volume %s; it may still be in use.\n' "$volume" >&2
+                return 1
+            fi
+        fi
+    done
+
+    if ! remaining_volumes="$(docker volume ls --format '{{.Name}}')"; then
+        printf '%s\n' "Could not verify whether the data volumes were deleted." >&2
+        return 1
+    fi
+    for volume in odoo19_fresh_v2_odoo_data odoo19_fresh_v2_postgres_data; do
+        if grep -Fxq "$volume" <<<"$remaining_volumes"; then
+            printf 'Data volume still exists: %s\n' "$volume" >&2
+            return 1
+        fi
+    done
+
     printf '%s\n' "Odoo containers and data volumes were deleted."
 }
 

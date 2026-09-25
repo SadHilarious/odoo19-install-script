@@ -50,7 +50,7 @@ The menu offers these options:
 | --- | --- |
 | `1` | Start PostgreSQL and Odoo; on the first run, initialize the database and install Accounting, Sales, and Purchase. |
 | `2` | Stop the containers while preserving their data |
-| `3` | Prompt for `DELETE`, then remove the containers and **all odoo/postgres data** in the stack's two volumes |
+| `3` | Prompt for `DELETE`, stop the stack even if it is running, then remove its containers and **both odoo/postgres data volumes**. The script reports an error if removal fails |
 | `0` | Exit script |
 
 You can also run `./odoo-control.sh start`, `./odoo-control.sh stop`, or `./odoo-control.sh delete` directly. <br>
