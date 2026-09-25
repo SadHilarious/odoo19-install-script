@@ -1,4 +1,4 @@
-# Odoo 19 with Accounting enable
+# Odoo 19 with Accounting, Sales, and Purchase
 
 > [!NOTE]
 > Must run on Linux host (WSL is ok)
@@ -48,14 +48,34 @@ The menu offers these options:
 
 | Option | Action |
 | --- | --- |
-| `1` | Start postgres and odoo; on the first run, initialize the database |
+| `1` | Start PostgreSQL and Odoo; on the first run, initialize the database and install Accounting, Sales, and Purchase. |
 | `2` | Stop the containers while preserving their data |
 | `3` | Prompt for `DELETE`, then remove the containers and **all odoo/postgres data** in the stack's two volumes |
 | `0` | Exit script |
 
 You can also run `./odoo-control.sh start`, `./odoo-control.sh stop`, or `./odoo-control.sh delete` directly. <br>
 After deleting the data, choose `1` or `start` to create a new database. Deletion does not remove the host addon directory or the external network (`cloudflared_net`).<br>
-Initializing the database and installing Accounting may take several minutes.
+Initializing the database and installing these apps may take several minutes.
+
+The Compose `init` service installs `accountant`, `sale_management`, and `purchase`. Odoo 19 names the Sales app `sale_management` (which depends on `sale`); the Purchase app is `purchase`. Dependencies are installed automatically. See the [Sales manifest](https://github.com/odoo/odoo/blob/19.0/addons/sale_management/__manifest__.py), [Purchase manifest](https://github.com/odoo/odoo/blob/19.0/addons/purchase/__manifest__.py), and [Odoo CLI documentation](https://www.odoo.com/documentation/19.0/developer/reference/cli.html#cmdoption-odoo-bin-i).
+
+If this stack already has a database, install the new apps **without deleting either volume**. From the `docker/` directory, stop only the web service, run a one-off Odoo installer with the same configuration and addon mount, then start the web service again:
+
+```bash
+docker compose -p odoo19fresh stop web
+ADDON_DIR="/opt/docker-data/odoo19-enterprise-crack" docker compose -p odoo19fresh run --rm --no-deps init \
+  odoo --db_host=db --db_port=5432 --db_user=odoo --db_password=odoo \
+  --database=odoo --data-dir=/var/lib/odoo --without-demo=True --no-http \
+  -i sale_management,purchase --stop-after-init
+docker compose -p odoo19fresh start web
+```
+
+Set `ADDON_DIR` in the command above to the same Linux host path configured in `odoo-control.sh`. Confirm both apps are installed with:
+
+```bash
+docker compose -p odoo19fresh exec db psql -U odoo -d odoo -c \
+  "SELECT name, state FROM ir_module_module WHERE name IN ('sale_management', 'purchase') ORDER BY name;"
+```
 
 **Admin account:** Each time the control script starts Odoo, it warns you and creates or resets the Odoo user to `admin / 123456789`<br>
 This default password is easy to guess; set `ODOO_ADMIN_PASSWORD` before running the script to use a different value. If you change the password in Odoo, the next `start` will reset it to the configured values
