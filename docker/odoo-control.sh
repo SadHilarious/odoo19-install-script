@@ -34,11 +34,14 @@ require_runtime() {
 }
 
 ensure_addons_path() {
-    if [[ ! -f "$addons_path/accountant/__manifest__.py" ]]; then
-        printf 'Accounting addon not found under: %s\n' "$addons_path" >&2
-        printf 'Edit ADDON_DIR in this script to set the host addon directory.\n' >&2
-        exit 1
-    fi
+    local module
+    for module in accountant mrp_plm; do
+        if [[ ! -f "$addons_path/$module/__manifest__.py" ]]; then
+            printf 'Required addon %s not found under: %s\n' "$module" "$addons_path" >&2
+            printf 'Edit ADDON_DIR in this script to set the host addon directory.\n' >&2
+            return 1
+        fi
+    done
 }
 
 ensure_network() {

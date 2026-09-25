@@ -17,7 +17,7 @@ services:
       - --without-demo=True
       - --no-http
       - -i
-      - base,accountant,sale_management,purchase,stock
+      - base,accountant,sale_management,purchase,stock,mrp,mrp_plm
       - --stop-after-init
     volumes:
       - odoo-data:/var/lib/odoo

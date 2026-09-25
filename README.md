@@ -1,8 +1,8 @@
 # Odoo 19 with Docker Compose
 
 > [!CAUTION]
-> **For educational and research purposes only**
-> Do not use this repo in a production environment
+> **For educational and research purposes only** <br>
+> Do not use this repo in a production environment <br>
 > [Purchase a valid license](https://www.odoo.com/pricing)
 
 > [!NOTE]
@@ -21,8 +21,10 @@ On a fresh database, the Compose `init` service installs these Odoo 19 applicati
 | Sales | `sale_management` | [Odoo 19 manifest](https://github.com/odoo/odoo/blob/19.0/addons/sale_management/__manifest__.py) |
 | Purchase | `purchase` | [Odoo 19 manifest](https://github.com/odoo/odoo/blob/19.0/addons/purchase/__manifest__.py) |
 | Inventory | `stock` | [Odoo 19 manifest](https://github.com/odoo/odoo/blob/19.0/addons/stock/__manifest__.py) |
+| Manufacturing | `mrp` | [Odoo 19 manifest](https://github.com/odoo/odoo/blob/19.0/addons/mrp/__manifest__.py) |
+| Product Lifecycle Management (PLM) | `mrp_plm` | Addon directory mounted at `/mnt/extra-addons` |
 
-Odoo automatically installs required dependencies and eligible integration modules. Sales depends on the underlying `sale` module. See [Odoo's `-i` option](https://www.odoo.com/documentation/19.0/developer/reference/cli.html#cmdoption-odoo-bin-i) for installing multiple modules
+Odoo automatically installs required dependencies and eligible integration modules. Sales depends on the underlying `sale` module; PLM depends on `mrp` but [is not installed automatically with Manufacturing](https://www.odoo.com/documentation/19.0/applications/inventory_and_mrp/plm.html#install-plm). See [Odoo's `-i` option](https://www.odoo.com/documentation/19.0/developer/reference/cli.html#cmdoption-odoo-bin-i) for installing multiple modules
 
 ## Prerequisites
 
@@ -45,10 +47,11 @@ Edit `ADDON_DIR` near the top of `docker/odoo-control.sh` to the absolute path:
 ADDON_DIR="/opt/docker-data/odoo19-enterprise-crack"
 ```
 
-Check the directory before deploying:
+Check that both Enterprise application addons are in the directory before deploying:
 
 ```bash
-cat /opt/docker-data/odoo19-enterprise-crack/accountant/__manifest__.py
+test -f /opt/docker-data/odoo19-enterprise-crack/accountant/__manifest__.py
+test -f /opt/docker-data/odoo19-enterprise-crack/mrp_plm/__manifest__.py
 ```
 
 The control script checks this path and passes `ADDON_DIR` to Compose. Both `init` and `web` mount it read only on `/mnt/extra-addons`. If you run `docker compose` instead of using the script, set `ADDON_DIR` in your environment; otherwise compose file uses the default path in `docker-compose.yml`
@@ -84,15 +87,15 @@ docker compose -p odoo19fresh stop web
 ADDON_DIR="/opt/docker-data/odoo19-enterprise-crack" docker compose -p odoo19fresh run --rm --no-deps init \
   odoo --db_host=db --db_port=5432 --db_user=odoo --db_password=odoo \
   --database=odoo --data-dir=/var/lib/odoo --without-demo=True --no-http \
-  -i sale_management,purchase,stock --stop-after-init &&
+  -i sale_management,purchase,stock,mrp,mrp_plm --stop-after-init &&
 docker compose -p odoo19fresh start web
 ```
 
-Set `ADDON_DIR` in the command above to the same Linux host path configured in `odoo-control.sh`. The command installs any listed modules that are not already installed; existing data remains in place. Confirm all three apps are installed with:
+Set `ADDON_DIR` in the command above to the same Linux host path configured in `odoo-control.sh`. The command installs any listed modules that are not already installed; existing data remains in place. Confirm the apps are installed with:
 
 ```bash
 docker compose -p odoo19fresh exec db psql -U odoo -d odoo -c \
-  "SELECT name, state FROM ir_module_module WHERE name IN ('sale_management', 'purchase', 'stock') ORDER BY name;"
+  "SELECT name, state FROM ir_module_module WHERE name IN ('sale_management', 'purchase', 'stock', 'mrp', 'mrp_plm') ORDER BY name;"
 ```
 
 **Admin account:** Each time the control script starts Odoo, it warns you and creates or resets the Odoo user to `admin / 123456789`<br>
@@ -122,4 +125,3 @@ Change an existing user's password (the script prompts for a new password withou
 ```
 
 The database is initialized without demo data, so `demo@demo.com` does not exist by default. If you change the admin password this way, the next `./odoo-control.sh start` will reset it again
-
