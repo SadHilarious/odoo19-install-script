@@ -1,5 +1,9 @@
 # Odoo 19 with Docker Compose
 
+> [!CAUTION]
+> **For educational and research purposes only**
+> Do not use this repo in a production environment
+> [Purchase a valid license](https://www.odoo.com/pricing)
 > [!NOTE]
 > Must run on Linux host (WSL is ok)
 - `docker-compose.yml`: postgresdb and odoo itself
@@ -117,3 +121,4 @@ Change an existing user's password (the script prompts for a new password withou
 ```
 
 The database is initialized without demo data, so `demo@demo.com` does not exist by default. If you change the admin password this way, the next `./odoo-control.sh start` will reset it again
+
