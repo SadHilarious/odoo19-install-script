@@ -22,6 +22,7 @@ services:
     volumes:
       - odoo-data:/var/lib/odoo
       - "${ADDON_DIR:-/opt/docker-data/odoo19-enterprise-crack}:/mnt/extra-addons:ro"
+      - "./mod/update.py:/usr/lib/python3/dist-packages/odoo/addons/mail/models/update.py:ro"
     networks:
       - cloudflared_net
     restart: "no"
@@ -54,6 +55,7 @@ services:
     volumes:
       - odoo-data:/var/lib/odoo
       - "${ADDON_DIR:-/opt/docker-data/odoo19-enterprise-crack}:/mnt/extra-addons:ro"
+      - "./mod/update.py:/usr/lib/python3/dist-packages/odoo/addons/mail/models/update.py:ro"
     restart: unless-stopped
 
   db:
