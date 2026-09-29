@@ -17,14 +17,17 @@ On a fresh database, the Compose `init` service installs these Odoo 19 applicati
 
 | Application | Module | Source |
 | --- | --- | --- |
+| Invoicing | `account` | [Odoo 19 manifest](https://github.com/odoo/odoo/blob/19.0/addons/account/__manifest__.py) |
 | Accounting | `accountant` | Addon directory mounted at `/mnt/extra-addons` |
 | Sales | `sale_management` | [Odoo 19 manifest](https://github.com/odoo/odoo/blob/19.0/addons/sale_management/__manifest__.py) |
 | Purchase | `purchase` | [Odoo 19 manifest](https://github.com/odoo/odoo/blob/19.0/addons/purchase/__manifest__.py) |
 | Inventory | `stock` | [Odoo 19 manifest](https://github.com/odoo/odoo/blob/19.0/addons/stock/__manifest__.py) |
 | Manufacturing | `mrp` | [Odoo 19 manifest](https://github.com/odoo/odoo/blob/19.0/addons/mrp/__manifest__.py) |
 | Product Lifecycle Management (PLM) | `mrp_plm` | Addon directory mounted at `/mnt/extra-addons` |
+| CRM | `crm` | [Odoo 19 manifest](https://github.com/odoo/odoo/blob/19.0/addons/crm/__manifest__.py) |
+| Contacts | `contacts` | [Odoo 19 manifest](https://github.com/odoo/odoo/blob/19.0/addons/contacts/__manifest__.py) |
 
-Odoo automatically installs required dependencies and eligible integration modules. Sales depends on the underlying `sale` module; PLM depends on `mrp` but [is not installed automatically with Manufacturing](https://www.odoo.com/documentation/19.0/applications/inventory_and_mrp/plm.html#install-plm). See [Odoo's `-i` option](https://www.odoo.com/documentation/19.0/developer/reference/cli.html#cmdoption-odoo-bin-i) for installing multiple modules
+Invoicing (`account`) is a separate standard Odoo module from the mounted Accounting (`accountant`) addon. Odoo automatically installs required dependencies and eligible integration modules. CRM depends on Contacts; both are listed explicitly to make the enabled apps clear. Sales depends on the underlying `sale` module; PLM depends on `mrp` but [is not installed automatically with Manufacturing](https://www.odoo.com/documentation/19.0/applications/inventory_and_mrp/plm.html#install-plm). See [Odoo's `-i` option](https://www.odoo.com/documentation/19.0/developer/reference/cli.html#cmdoption-odoo-bin-i) for installing multiple modules
 
 ## Prerequisites
 
@@ -80,23 +83,25 @@ Initializing the database and installing these apps may take several minutes.
 
 ## Install enabled applications on an existing database
 
-Changing the one-time `init` command alone will not install newly added applications on an existing database. Install missing apps **without deleting either volume**. From the `docker/` directory, stop only the web service, run a one-off Odoo installer with the same configuration and addon mount, then start the web service again:
+Changing the `init` command alone will not install newly added applications on an existing database. Back up the database **and Odoo filestore** before installing modules. Install missing apps **without deleting either volume**. PostgreSQL must already be running (`--no-deps` does not start it). From the `docker/` directory, stop only the web service, run a one-off Odoo installer with the same configuration and addon mount, then start the web service again only if installation succeeds:
 
 ```bash
 docker compose -p odoo19fresh stop web
 ADDON_DIR="/opt/docker-data/odoo19-enterprise-crack" docker compose -p odoo19fresh run --rm --no-deps init \
   odoo --db_host=db --db_port=5432 --db_user=odoo --db_password=odoo \
   --database=odoo --data-dir=/var/lib/odoo --without-demo=True --no-http \
-  -i sale_management,purchase,stock,mrp,mrp_plm --stop-after-init &&
+  -i sale_management,purchase,stock,mrp,mrp_plm,account,crm,contacts --stop-after-init &&
 docker compose -p odoo19fresh start web
 ```
 
-Set `ADDON_DIR` in the command above to the same Linux host path configured in `odoo-control.sh`. The command installs any listed modules that are not already installed; existing data remains in place. Confirm the apps are installed with:
+Set `ADDON_DIR` in the command above to the same Linux host path configured in `odoo-control.sh`. The command installs any listed modules that are not already installed; existing data remains in place. If installation fails, the web service stays stopped: inspect the installer output, fix the error, then retry before starting web. Confirm the apps are installed with:
 
 ```bash
 docker compose -p odoo19fresh exec db psql -U odoo -d odoo -c \
-  "SELECT name, state FROM ir_module_module WHERE name IN ('sale_management', 'purchase', 'stock', 'mrp', 'mrp_plm') ORDER BY name;"
+  "SELECT name, state FROM ir_module_module WHERE name IN ('account', 'accountant', 'sale_management', 'purchase', 'stock', 'mrp', 'mrp_plm', 'crm', 'contacts') ORDER BY name;"
 ```
+
+Expect all nine modules to show `installed`. Log in to confirm Invoicing, CRM, and Contacts are available in the Odoo UI.
 
 **Admin account:** Each time the control script starts Odoo, it warns you and creates or resets the Odoo user to `admin / 123456789`<br>
 This default password is easy to guess; set `ODOO_ADMIN_PASSWORD` before running the script to use a different value. If you change the password in Odoo, the next `start` will reset it to the configured values
