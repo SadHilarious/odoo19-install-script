@@ -16,13 +16,14 @@ services:
       - --data-dir=/var/lib/odoo
       - --without-demo=True
       - --no-http
+      - --addons-path=/usr/lib/python3/dist-packages/odoo/addons,/mnt/extra-addons
       - -i
-      - base,account,accountant,sale_management,purchase,stock,mrp,mrp_plm,crm,contacts
+      - base,account,accountant,sale_management,purchase,stock,mrp,mrp_plm,crm,contacts,disable_publisher_warranty
       - --stop-after-init
     volumes:
       - odoo-data:/var/lib/odoo
       - "${ADDON_DIR:-/opt/docker-data/odoo19-enterprise-crack}:/mnt/extra-addons:ro"
-      - "./mod/update.py:/usr/lib/python3/dist-packages/odoo/addons/mail/models/update.py:ro"
+      - "./disable_publisher_warranty:/mnt/extra-addons/disable_publisher_warranty:ro"
     networks:
       - cloudflared_net
     restart: "no"
@@ -48,6 +49,7 @@ services:
       - --http-interface=0.0.0.0
       - --http-port=8069
       - --workers=0
+      - --addons-path=/usr/lib/python3/dist-packages/odoo/addons,/mnt/extra-addons
     ports:
       - "8069:8069"
     networks:
@@ -55,7 +57,7 @@ services:
     volumes:
       - odoo-data:/var/lib/odoo
       - "${ADDON_DIR:-/opt/docker-data/odoo19-enterprise-crack}:/mnt/extra-addons:ro"
-      - "./mod/update.py:/usr/lib/python3/dist-packages/odoo/addons/mail/models/update.py:ro"
+      - "./disable_publisher_warranty:/mnt/extra-addons/disable_publisher_warranty:ro"
     restart: unless-stopped
 
   db:
