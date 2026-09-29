@@ -23,7 +23,6 @@ services:
     volumes:
       - odoo-data:/var/lib/odoo
       - "${ADDON_DIR:-/opt/docker-data/odoo19-enterprise-crack}:/mnt/extra-addons:ro"
-      - "./disable_publisher_warranty:/mnt/extra-addons/disable_publisher_warranty:ro"
     networks:
       - cloudflared_net
     restart: "no"
@@ -57,7 +56,6 @@ services:
     volumes:
       - odoo-data:/var/lib/odoo
       - "${ADDON_DIR:-/opt/docker-data/odoo19-enterprise-crack}:/mnt/extra-addons:ro"
-      - "./disable_publisher_warranty:/mnt/extra-addons/disable_publisher_warranty:ro"
     restart: unless-stopped
 
   db:

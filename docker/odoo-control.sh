@@ -110,6 +110,12 @@ start_server() {
     ensure_addons_path
     ensure_network
     export ADDON_DIR="$addons_path"
+	
+	if [[ -d "$script_dir/disable_publisher_warranty" ]]; then
+        cp -r "$script_dir/disable_publisher_warranty" "$addons_path/"
+        chmod -R a+rX "$addons_path/disable_publisher_warranty"
+    fi
+	
     printf 'WARNING: Odoo admin account will be reset to admin / %s on every start.\n' "$admin_password" >&2
 
     compose up -d --remove-orphans
