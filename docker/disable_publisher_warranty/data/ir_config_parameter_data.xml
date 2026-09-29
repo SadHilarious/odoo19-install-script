@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Set expiration date to 2099 -->
+    <record id="param_database_expiration_date" model="ir.config_parameter">
+        <field name="key">database.expiration_date</field>
+        <field name="value">2099-12-31 23:59:59</field>
+    </record>
+
+    <!-- Delete database expiration reason -->
+    <record id="param_database_expiration_reason" model="ir.config_parameter">
+        <field name="key">database.expiration_reason</field>
+        <field name="value"></field>
+    </record>
+</odoo>
