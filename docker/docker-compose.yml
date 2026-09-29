@@ -47,7 +47,8 @@ services:
       - --without-demo=True
       - --http-interface=0.0.0.0
       - --http-port=8069
-      - --workers=0
+      # Number of thread for odoo, 5 is recommend, 0 for testing
+      - --workers=5
       - --addons-path=/usr/lib/python3/dist-packages/odoo/addons,/mnt/extra-addons
     ports:
       - "8069:8069"
